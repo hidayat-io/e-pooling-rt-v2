@@ -40,6 +40,8 @@ backend/uploads/*
 !backend/uploads/.gitkeep
 
 # Logs
+logs/*
+!logs/.gitkeep
 backend/logs/*
 !backend/logs/.gitkeep
 
