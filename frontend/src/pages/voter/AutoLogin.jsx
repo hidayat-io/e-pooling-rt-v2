@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { authService } from '../../services/authService';
 import useVoterStore from '../../stores/voterStore';
 import Loader from '../../components/common/Loader';
+import { CONTACT_WA } from '../../utils/constants';
 
 export default function AutoLogin() {
     const { token } = useParams();
@@ -58,7 +59,7 @@ export default function AutoLogin() {
                     </p>
                     <div className="mt-6">
                         <a
-                            href={`https://wa.me/${import.meta.env.VITE_APP_CONTACT_WA || '628123456789'}`}
+                            href={`https://wa.me/${CONTACT_WA}`}
                             target="_blank"
                             rel="noreferrer"
                             className="btn-outline text-sm inline-flex"

@@ -154,7 +154,7 @@ const authController = {
                      v.nik, v.nama, v.phone, v.rt, v.rw, v.has_voted
               FROM voter_tokens vt
               JOIN voters v ON v.id = vt.voter_id
-              WHERE vt.login_code = $1 AND vt.is_used = 0 AND vt.expired_at > NOW()
+              WHERE vt.login_code = $1
               ORDER BY vt.created_at DESC
               LIMIT 1
             `, [code]);
@@ -170,6 +170,12 @@ const authController = {
 
             if (Number(tokenRecord.has_voted) === 1) {
                 throw new AppError('ALREADY_VOTED', 'Anda sudah memberikan suara sebelumnya', 409);
+            }
+            if (Number(tokenRecord.is_used) === 1) {
+                throw new AppError('TOKEN_USED', 'Link pooling sudah digunakan', 410);
+            }
+            if (new Date(tokenRecord.expired_at) < new Date()) {
+                throw new AppError('TOKEN_EXPIRED', 'Link pooling sudah kadaluarsa', 410);
             }
 
             const jwt = signVoterToken({

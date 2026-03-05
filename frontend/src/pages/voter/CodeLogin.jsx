@@ -26,8 +26,8 @@ export default function CodeLogin() {
             setVoter(payload.voter);
             navigate('/verify', { replace: true });
         } catch (err) {
-            if (err.error === 'ALREADY_VOTED') {
-                navigate('/already-voted', { replace: true });
+            if (['ALREADY_VOTED', 'TOKEN_USED', 'TOKEN_EXPIRED'].includes(err.error)) {
+                navigate('/public/results', { replace: true });
                 return;
             }
             setError(err.message || 'Kode unik tidak valid');
@@ -90,6 +90,14 @@ export default function CodeLogin() {
                         {loading ? 'Memverifikasi...' : 'Lanjut'}
                     </button>
                 </form>
+
+                <button
+                    type="button"
+                    onClick={() => navigate('/public/results')}
+                    className="w-full mt-3 btn-outline"
+                >
+                    Lihat Hasil Pooling
+                </button>
 
                 <div className="mt-5 text-center">
                     <a href="/admin" className="text-xs text-gray-500 hover:text-gray-700 underline">

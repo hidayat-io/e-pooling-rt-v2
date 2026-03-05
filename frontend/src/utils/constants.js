@@ -3,7 +3,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localho
 
 const _apiUrl = API_BASE_URL;
 export const STATIC_BASE_URL = _apiUrl.startsWith('http') ? _apiUrl.replace('/api/v1', '') : '';
-export const CONTACT_WA = import.meta.env.VITE_APP_CONTACT_WA || '628123456789';
+export const CONTACT_WA = import.meta.env.VITE_APP_CONTACT_WA || '628128324040';
 
 export function resolveAssetUrl(assetPath) {
     if (!assetPath) return '';
