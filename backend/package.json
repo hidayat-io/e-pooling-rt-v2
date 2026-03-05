@@ -1,0 +1,40 @@
+{
+  "name": "e-pooling-rt-backend",
+  "version": "1.0.0",
+  "description": "Backend API for E-Pooling RT/RW Application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start:api": "node server.js",
+    "start:worker:wa": "node worker.js wa-queue",
+    "start:worker:cleanup": "node worker.js token-cleanup",
+    "dev": "ENABLE_LOCAL_CRON=true node --watch server.js",
+    "seed": "node src/database/seeds.js"
+  },
+  "keywords": [
+    "e-pooling",
+    "rt",
+    "rw"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@google-cloud/storage": "^7.19.0",
+    "axios": "^1.7.7",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
+    "pg": "^8.16.3",
+    "uuid": "^10.0.0",
+    "winston": "^3.14.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.23.8"
+  }
+}
