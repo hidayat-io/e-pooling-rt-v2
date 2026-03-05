@@ -7,6 +7,7 @@ Dokumen ini menyiapkan struktur project agar cocok untuk model free-tier:
 
 Untuk handover operasional terbaru, lihat juga:
 - `AI_AGENT_DEPLOY_RUNBOOK.md`
+- `GITHUB_LOCAL_CLOUD_DEPLOY.md` (panduan dari clone GitHub sampai deploy cloud)
 
 ## 1) Perubahan struktur yang sudah diterapkan
 
