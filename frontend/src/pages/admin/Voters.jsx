@@ -4,7 +4,7 @@ import { adminService } from '../../services/adminService';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import Loader from '../../components/common/Loader';
-import { Search, Upload, Key, Trash2, ChevronLeft, ChevronRight, Pencil, Send, Link2, History, Plus } from 'lucide-react';
+import { Search, Upload, Key, Trash2, ChevronLeft, ChevronRight, Pencil, Send, Link2, History, Plus, CheckCircle2, MessageCircle } from 'lucide-react';
 
 export default function AdminVoters() {
     const navigate = useNavigate();
@@ -33,6 +33,8 @@ export default function AdminVoters() {
     const [adding, setAdding] = useState(false);
     const [sendingId, setSendingId] = useState(null);
     const [impersonatingId, setImpersonatingId] = useState(null);
+    const [manualWaLinkId, setManualWaLinkId] = useState(null);
+    const [markingManualSentId, setMarkingManualSentId] = useState(null);
 
     const fetchVoters = useCallback(async () => {
         setLoading(true);
@@ -112,6 +114,35 @@ export default function AdminVoters() {
         }
     };
 
+    const handleOpenManualWaLink = async (voter) => {
+        setManualWaLinkId(voter.id);
+        try {
+            const res = await adminService.getManualWaLink(voter.id);
+            const waLink = res.data?.wa_link;
+            if (!waLink) throw new Error('Link wa.me tidak tersedia');
+            window.open(waLink, '_blank', 'noopener,noreferrer');
+        } catch (err) {
+            alert(err.message || 'Gagal membuat link wa.me');
+        } finally {
+            setManualWaLinkId(null);
+        }
+    };
+
+    const handleMarkManualWaSent = async (voter) => {
+        const ok = confirm(`Tandai WA ke "${voter.nama}" sebagai sudah terkirim manual?`);
+        if (!ok) return;
+
+        setMarkingManualSentId(voter.id);
+        try {
+            await adminService.markManualWaSent(voter.id);
+            fetchVoters();
+        } catch (err) {
+            alert(err.message || 'Gagal tandai WA manual');
+        } finally {
+            setMarkingManualSentId(null);
+        }
+    };
+
     const handleEditSubmit = async () => {
         setEditLoading(true);
         try {
@@ -146,12 +177,12 @@ export default function AdminVoters() {
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Data Pemilih (DPT)</h1>
                     <p className="text-gray-500 text-sm">{meta?.total || 0} pemilih terdaftar</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <Button size="sm" icon={Plus} onClick={() => setAddModal(true)}>Tambah Data</Button>
                     <Button size="sm" variant="outline" icon={Upload} onClick={() => setImportModal(true)}>Import Excel</Button>
                     <Button size="sm" icon={Key} loading={generating} onClick={handleGenerateTokens}>Generate Kode</Button>
@@ -189,7 +220,7 @@ export default function AdminVoters() {
                 {loading ? (
                     <Loader text="Memuat data..." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="w-full min-w-[980px] text-sm">
                         <thead>
                             <tr className="border-b border-gray-100">
                                 <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase">No.Rumah</th>
@@ -239,6 +270,22 @@ export default function AdminVoters() {
                                                 <Send className="w-4 h-4" />
                                             </button>
                                             <button
+                                                onClick={() => handleOpenManualWaLink(v)}
+                                                disabled={manualWaLinkId === v.id}
+                                                className="text-cyan-500 hover:text-cyan-700 p-1 disabled:opacity-50"
+                                                title="Buka link wa.me dengan isi pesan"
+                                            >
+                                                <MessageCircle className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleMarkManualWaSent(v)}
+                                                disabled={markingManualSentId === v.id}
+                                                className="text-lime-600 hover:text-lime-700 p-1 disabled:opacity-50"
+                                                title="Tandai WA sudah terkirim manual"
+                                            >
+                                                <CheckCircle2 className="w-4 h-4" />
+                                            </button>
+                                            <button
                                                 onClick={() => handleImpersonate(v)}
                                                 disabled={impersonatingId === v.id}
                                                 className="text-violet-500 hover:text-violet-700 p-1 disabled:opacity-50"
@@ -270,7 +317,7 @@ export default function AdminVoters() {
 
             {/* Pagination */}
             {meta && meta.totalPages > 1 && (
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm text-gray-500">Hal {meta.page} dari {meta.totalPages}</p>
                     <div className="flex gap-2">
                         <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 disabled:opacity-50">

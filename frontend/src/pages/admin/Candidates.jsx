@@ -89,7 +89,7 @@ export default function AdminCandidates() {
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Manajemen Kandidat</h1>
                     <p className="text-gray-500 text-sm">{candidates.length} kandidat terdaftar</p>
@@ -141,7 +141,7 @@ export default function AdminCandidates() {
             {/* Form Modal */}
             <Modal isOpen={formModal} onClose={() => setFormModal(false)} title={editingId ? 'Edit Kandidat' : 'Tambah Kandidat'} size="lg">
                 <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="text-sm font-medium text-gray-700 mb-1 block">Nomor Urut</label>
                             <input type="number" value={form.nomor_urut} onChange={(e) => setForm({ ...form, nomor_urut: e.target.value })} className="input-field" />

@@ -117,6 +117,10 @@ INSERT INTO election_settings (key, value, description) VALUES
   ('pooling_status', 'active', 'Status: active/closed/paused'),
   ('show_realtime', '1', 'Tampilkan hasil real-time'),
   ('total_dpt', '0', 'Total DPT terdaftar'),
+  ('wa_message_delay_ms', '20000', 'Interval pengiriman WA per pesan (milidetik)'),
+  ('wa_message_jitter_ms', '0', 'Variasi acak interval pengiriman WA (milidetik)'),
+  ('wa_rate_limit', '20', 'Maksimal jumlah pesan WA yang diproses per batch queue'),
+  ('wa_queue_run_every_seconds', '60', 'Interval trigger queue WA (detik)'),
   ('wa_message_template', 'YTH *{nama}*,
 Kami mengundang Anda dalam partisipasi E-Pooling {election_name}
 Periode {election_period}

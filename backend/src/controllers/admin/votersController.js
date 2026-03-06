@@ -5,6 +5,7 @@ const { query, pool } = require('../../config/pgPool');
 const { normalizePhone } = require('../../utils/excelParser');
 const { maskNik, maskPhone } = require('../../utils/maskData');
 const { AppError } = require('../../utils/response');
+const whatsappService = require('../../services/whatsappService');
 const fs = require('fs');
 
 /**
@@ -369,6 +370,94 @@ const adminVotersController = {
                 expired_at: tokenData.expired_at,
                 link,
             }, 'Link impersonate berhasil dibuat');
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    /**
+     * POST /api/v1/admin/voters/:id/wa-link
+     * Generate link wa.me berisi pesan personal untuk kirim manual
+     */
+    async getManualWaLink(req, res, next) {
+        try {
+            const voterId = parseInt(req.params.id, 10);
+            const voterResult = await query(
+                'SELECT id, nama, phone, rt, rw FROM voters WHERE id = $1 LIMIT 1',
+                [voterId],
+            );
+            const voter = voterResult.rows?.[0];
+            if (!voter) throw new AppError('NOT_FOUND', 'Pemilih tidak ditemukan', 404);
+
+            let tokenData = await tokenService.getActiveTokenForVoter(voterId);
+            if (!tokenData) {
+                const gen = await tokenService.generateForVoter(voterId);
+                if (gen.skipped) {
+                    throw new AppError('TOKEN_NOT_AVAILABLE', gen.reason || 'Token tidak tersedia', 400);
+                }
+                tokenData = await tokenService.getActiveTokenForVoter(voterId);
+            }
+            if (!tokenData) throw new AppError('TOKEN_NOT_AVAILABLE', 'Token aktif tidak ditemukan', 400);
+
+            const loginCode = tokenData.login_code || await tokenService.ensureLoginCodeForToken(tokenData.id);
+            const settings = await whatsappService.getSettings();
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            const message = whatsappService.buildMessage(voter, frontendUrl, loginCode, tokenData.expired_at, settings);
+            const waNumber = normalizePhone(voter.phone);
+            const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
+
+            return res.success({
+                voter_id: voter.id,
+                voter_name: voter.nama,
+                phone: waNumber,
+                wa_link: waLink,
+                message,
+            }, 'Link WA manual berhasil dibuat');
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    /**
+     * POST /api/v1/admin/voters/:id/mark-wa-sent
+     * Manual flag status WA sent (untuk pengiriman di luar sistem)
+     */
+    async markManualWaSent(req, res, next) {
+        try {
+            const voterId = parseInt(req.params.id, 10);
+            const voterResult = await query(
+                'SELECT id, nama, phone FROM voters WHERE id = $1 LIMIT 1',
+                [voterId],
+            );
+            const voter = voterResult.rows?.[0];
+            if (!voter) throw new AppError('NOT_FOUND', 'Pemilih tidak ditemukan', 404);
+
+            const insertResult = await query(
+                `
+                  INSERT INTO whatsapp_logs (voter_id, phone, status, error_msg, sent_at)
+                  VALUES ($1, $2, 'sent', 'Manual send by admin', NOW())
+                  RETURNING id, status, sent_at
+                `,
+                [voter.id, normalizePhone(voter.phone)],
+            );
+            const log = insertResult.rows?.[0];
+
+            reportService.logAudit(
+                req.admin.id,
+                'MARK_MANUAL_WA_SENT',
+                'whatsapp',
+                log?.id || null,
+                { voter_id: voter.id, voter_name: voter.nama, source: 'manual' },
+                req.ip,
+            );
+
+            return res.success({
+                id: log?.id,
+                voter_id: voter.id,
+                status: log?.status || 'sent',
+                sent_at: log?.sent_at || new Date().toISOString(),
+                source: 'manual',
+            }, 'Status WA ditandai sebagai sent');
         } catch (error) {
             next(error);
         }

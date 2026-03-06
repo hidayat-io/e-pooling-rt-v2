@@ -3,6 +3,42 @@ const { query, pool } = require('../../config/pgPool');
 const XLSX = require('xlsx');
 const { formatJakartaDateTime, formatJakartaFileTimestamp } = require('../../utils/dateTime');
 
+const WA_QUEUE_SETTING_DEFAULTS = [
+    {
+        key: 'wa_message_delay_ms',
+        value: '20000',
+        description: 'Interval pengiriman WA per pesan (milidetik)',
+    },
+    {
+        key: 'wa_message_jitter_ms',
+        value: '0',
+        description: 'Variasi acak interval pengiriman WA (milidetik)',
+    },
+    {
+        key: 'wa_rate_limit',
+        value: '20',
+        description: 'Maksimal jumlah pesan WA yang diproses per batch queue',
+    },
+    {
+        key: 'wa_queue_run_every_seconds',
+        value: '60',
+        description: 'Interval trigger queue WA (detik)',
+    },
+];
+
+async function ensureWaQueueSettings(runQuery) {
+    for (const setting of WA_QUEUE_SETTING_DEFAULTS) {
+        await runQuery(
+            `
+              INSERT INTO election_settings (key, value, description)
+              VALUES ($1, $2, $3)
+              ON CONFLICT (key) DO NOTHING
+            `,
+            [setting.key, setting.value, setting.description],
+        );
+    }
+}
+
 /**
  * Controller: Admin Dashboard, Monitoring & Reports
  */
@@ -398,6 +434,7 @@ const adminDashboardController = {
      */
     async getSettings(req, res, next) {
         try {
+            await ensureWaQueueSettings(query);
             const result = await query(
                 'SELECT key, value, description, updated_at FROM election_settings ORDER BY key ASC',
             );
@@ -417,10 +454,21 @@ const adminDashboardController = {
             const { settings } = req.body;
             client = await pool.connect();
             await client.query('BEGIN');
+            await ensureWaQueueSettings(client.query.bind(client));
             for (const { key, value } of settings) {
                 await client.query(
-                    'UPDATE election_settings SET value = $1, updated_at = NOW() WHERE key = $2',
-                    [value, key],
+                    `
+                      INSERT INTO election_settings (key, value, description, updated_at)
+                      VALUES (
+                        $1,
+                        $2,
+                        (SELECT description FROM election_settings WHERE key = $1 LIMIT 1),
+                        NOW()
+                      )
+                      ON CONFLICT (key)
+                      DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+                    `,
+                    [key, value],
                 );
             }
             await client.query('COMMIT');

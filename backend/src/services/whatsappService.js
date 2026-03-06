@@ -4,6 +4,23 @@ const { query } = require('../config/pgPool');
 const { AppError } = require('../utils/response');
 const logger = require('../config/logger');
 const { formatJakartaLongDateTime } = require('../utils/dateTime');
+const { estimateBroadcastSeconds, getWaQueueConfig } = require('../utils/waQueueConfig');
+
+function formatBroadcastLink(rawLink = '') {
+    const value = String(rawLink || '').trim();
+    if (!value) return '';
+
+    try {
+        const withProtocol = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+        const url = new URL(withProtocol);
+        return url.host;
+    } catch {
+        return value
+            .replace(/^https?:\/\//i, '')
+            .replace(/^www\./i, '')
+            .split('/')[0];
+    }
+}
 
 /**
  * Service untuk manajemen WhatsApp messages
@@ -150,10 +167,12 @@ class WhatsAppService {
         );
 
         logger.info(`Broadcast queued: ${targets.length} messages`);
+        const settings = await this.getSettings();
+        const queueConfig = getWaQueueConfig(settings);
 
         return {
             queued: targets.length,
-            estimated_time_seconds: Math.ceil(targets.length / (parseInt(process.env.WA_RATE_LIMIT, 10) || 20)),
+            estimated_time_seconds: estimateBroadcastSeconds(targets.length, queueConfig),
         };
     }
 
@@ -165,13 +184,14 @@ class WhatsAppService {
         const poolingEnd = poolingEndRaw
             ? formatJakartaLongDateTime(poolingEndRaw)
             : formatJakartaLongDateTime(expiredAt);
+        const displayLink = formatBroadcastLink(entryUrl);
 
         const template = settings.wa_message_template || '';
         let message = template
             .replace(/{nama}/g, voter.nama)
             .replace(/{election_name}/g, settings.election_name || '')
             .replace(/{election_period}/g, settings.election_period || '')
-            .replace(/{link}/g, entryUrl)
+            .replace(/{link}/g, displayLink)
             .replace(/{kode_unik}/g, loginCode || '----')
             .replace(/{batas_pooling}/g, poolingEnd)
             .replace(/{batas_voting}/g, poolingEnd)
@@ -180,8 +200,8 @@ class WhatsAppService {
         if (!template.includes('{kode_unik}') && loginCode) {
             message += `\n\nKode unik Anda: *${loginCode}*`;
         }
-        if (!template.includes('{link}') && entryUrl) {
-            message += `\nWebsite voting: ${entryUrl}`;
+        if (!template.includes('{link}') && displayLink) {
+            message += `\nWebsite voting: ${displayLink}`;
         }
 
         return message;

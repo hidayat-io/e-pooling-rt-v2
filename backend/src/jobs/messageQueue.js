@@ -4,12 +4,12 @@ const whatsapp = require('../config/whatsapp');
 const logger = require('../config/logger');
 const tokenService = require('../services/tokenService');
 const whatsappService = require('../services/whatsappService');
+const { getWaQueueConfig, getRandomMessageDelayMs } = require('../utils/waQueueConfig');
 
-const WA_RATE_LIMIT = parseInt(process.env.WA_RATE_LIMIT, 10) || 20;
 let isProcessing = false;
 
 /**
- * Proses max WA_RATE_LIMIT pending WhatsApp messages.
+ * Proses max WA rate-limit pending WhatsApp messages.
  * Aman dipanggil dari cron lokal maupun HTTP trigger (Cloud Scheduler).
  */
 async function processPendingMessages() {
@@ -27,6 +27,9 @@ async function processPendingMessages() {
     let failed = 0;
 
     try {
+        const settings = await whatsappService.getSettings();
+        const queueConfig = getWaQueueConfig(settings);
+
         const pendingResult = await query(
             `
               SELECT wl.id, wl.voter_id, wl.phone, v.nama, v.rt, v.rw
@@ -36,7 +39,7 @@ async function processPendingMessages() {
               ORDER BY wl.created_at ASC
               LIMIT $1
             `,
-            [WA_RATE_LIMIT],
+            [queueConfig.rateLimit],
         );
         const pendingMessages = pendingResult.rows || [];
 
@@ -49,11 +52,13 @@ async function processPendingMessages() {
             };
         }
 
-        logger.info(`Processing ${pendingMessages.length} pending WA messages`);
+        logger.info(
+            `Processing ${pendingMessages.length} pending WA messages (rate_limit=${queueConfig.rateLimit}, delay_ms=${queueConfig.messageDelayMs}, jitter_ms=${queueConfig.messageJitterMs})`,
+        );
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-        const settings = await whatsappService.getSettings();
 
-        for (const msg of pendingMessages) {
+        for (let index = 0; index < pendingMessages.length; index += 1) {
+            const msg = pendingMessages[index];
             try {
                 let tokenData = await tokenService.getActiveTokenForVoter(msg.voter_id);
                 if (!tokenData) {
@@ -101,7 +106,6 @@ async function processPendingMessages() {
                 }
 
                 processed += 1;
-                await new Promise((resolve) => setTimeout(resolve, 50));
             } catch (msgError) {
                 logger.error(`Failed to process message ${msg.id}:`, msgError);
                 await query(
@@ -110,6 +114,12 @@ async function processPendingMessages() {
                 );
                 failed += 1;
                 processed += 1;
+            }
+
+            // Beri jeda antar pesan agar tidak terdeteksi spam oleh provider/WA.
+            if (index < pendingMessages.length - 1) {
+                const delayMs = getRandomMessageDelayMs(queueConfig);
+                await new Promise((resolve) => setTimeout(resolve, delayMs));
             }
         }
 

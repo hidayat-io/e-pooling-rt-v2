@@ -33,7 +33,7 @@ export default function AdminMonitoring() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Monitoring Live</h1>
                     <div className="flex items-center gap-2 mt-1">
@@ -43,7 +43,7 @@ export default function AdminMonitoring() {
                 </div>
                 <button
                     onClick={() => setPaused(!paused)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all
+                    className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all
             ${paused ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700'}`}
                 >
                     {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}

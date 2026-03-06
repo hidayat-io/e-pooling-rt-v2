@@ -17,6 +17,8 @@ export const adminService = {
     }),
     generateTokens: () => api.post('/admin/voters/generate-tokens'),
     getImpersonateLink: (id) => api.post(`/admin/voters/${id}/impersonate-link`),
+    getManualWaLink: (id) => api.post(`/admin/voters/${id}/wa-link`),
+    markManualWaSent: (id) => api.post(`/admin/voters/${id}/mark-wa-sent`),
 
     // Candidates
     createCandidate: (data) => api.post('/admin/candidates', data),

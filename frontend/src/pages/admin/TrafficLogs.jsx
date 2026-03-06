@@ -128,14 +128,14 @@ export default function AdminTrafficLogs() {
         <div className="space-y-5">
 
             {/* Header */}
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Traffic Logs</h1>
                     <p className="text-gray-500 text-sm mt-0.5">Log setiap HTTP request yang masuk ke server</p>
                 </div>
                 <button
                     onClick={refresh}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
                 >
                     <RefreshCw className="w-4 h-4" />
                     Refresh
@@ -281,7 +281,7 @@ export default function AdminTrafficLogs() {
                             className="input-field"
                         />
                     </div>
-                    <div className="flex items-end gap-2">
+                    <div className="flex items-end gap-2 flex-wrap">
                         <button
                             onClick={applyFilter}
                             className="h-11 px-5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium flex items-center gap-2 transition-colors"
@@ -311,7 +311,7 @@ export default function AdminTrafficLogs() {
                         Tidak ada data dengan filter ini.
                     </div>
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="w-full min-w-[980px] text-sm">
                         <thead>
                             <tr className="border-b border-gray-100 bg-gray-50/60">
                                 <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">Waktu</th>
@@ -375,7 +375,7 @@ export default function AdminTrafficLogs() {
 
             {/* Pagination */}
             {meta && meta.totalPages > 1 && (
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm text-gray-500">
                         Hal {meta.page} dari {meta.totalPages}
                         <span className="ml-2 text-gray-400">({meta.total?.toLocaleString()} total)</span>

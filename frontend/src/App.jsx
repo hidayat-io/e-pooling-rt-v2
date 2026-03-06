@@ -1,4 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Menu } from 'lucide-react';
 import useVoterStore from './stores/voterStore';
 import useAdminStore from './stores/adminStore';
 import BottomNav from './components/common/BottomNav';
@@ -46,12 +48,54 @@ function VoterLayout() {
 // Layout wrapper untuk admin (dengan sidebar)
 function AdminLayout() {
   const { isAuthenticated } = useAdminStore();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileNavOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileNavOpen]);
+
   if (!isAuthenticated) return <Navigate to="/admin" replace />;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminNav />
-      <main className="ml-64 p-6">
+
+      <header className="md:hidden sticky top-0 z-30 bg-white border-b border-gray-200 px-3 py-2">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-700"
+            aria-label="Buka menu admin"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <p className="text-sm font-semibold text-gray-900">Admin Panel</p>
+          <div className="w-9" />
+        </div>
+      </header>
+
+      {mobileNavOpen ? (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button
+            onClick={() => setMobileNavOpen(false)}
+            className="absolute inset-0 bg-black/40"
+            aria-label="Tutup menu admin"
+          />
+          <div className="relative h-full w-[82%] max-w-xs">
+            <AdminNav mobile onNavigate={() => setMobileNavOpen(false)} />
+          </div>
+        </div>
+      ) : null}
+
+      <main className="md:ml-64 p-3 sm:p-4 md:p-6">
         <Outlet />
       </main>
     </div>

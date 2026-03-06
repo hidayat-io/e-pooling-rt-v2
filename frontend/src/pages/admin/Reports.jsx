@@ -68,7 +68,7 @@ export default function AdminReports() {
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Laporan Pilihan Pemilih</h1>
                     <p className="text-gray-500 text-sm">Lihat siapa memilih setuju / tidak setuju</p>
@@ -142,7 +142,7 @@ export default function AdminReports() {
                 {loading ? (
                     <Loader text="Memuat laporan..." />
                 ) : (
-                    <table className="w-full text-sm">
+                    <table className="w-full min-w-[860px] text-sm">
                         <thead>
                             <tr className="border-b border-gray-100">
                                 <th className="text-left py-3 px-3 text-xs font-semibold text-gray-500 uppercase">No. Rumah</th>
@@ -176,7 +176,7 @@ export default function AdminReports() {
             </div>
 
             {meta && meta.totalPages > 1 && (
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm text-gray-500">Hal {meta.page} dari {meta.totalPages}</p>
                     <div className="flex gap-2">
                         <button

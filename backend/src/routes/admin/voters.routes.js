@@ -32,6 +32,8 @@ router.post('/', validate(schemas.voterCreateAdmin), votersController.create);
 
 // Impersonate link
 router.post('/:id/impersonate-link', votersController.getImpersonateLink);
+router.post('/:id/wa-link', votersController.getManualWaLink);
+router.post('/:id/mark-wa-sent', votersController.markManualWaSent);
 
 // Detail voter
 router.get('/:id', votersController.detail);

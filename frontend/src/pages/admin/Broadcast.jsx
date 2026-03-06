@@ -6,7 +6,7 @@ import { formatDateTimeLong } from '../../utils/formatters';
 
 const SAMPLE = {
     nama: 'Budi Santoso',
-    link: 'https://cias.web.id',
+    link: 'cias.web.id',
     kode_unik: '1234',
     batas_pooling: 'Jumat, 31 Januari 2025, 23.59',
     kontak_panitia: '628123456789',
@@ -85,7 +85,7 @@ export default function AdminBroadcast() {
 
             {/* Template */}
             <div className="card space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <h3 className="font-bold text-gray-900">Template Pesan</h3>
                     {!editMode ? (
                         <button

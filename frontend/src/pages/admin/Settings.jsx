@@ -11,6 +11,10 @@ export default function AdminSettings() {
     const [saving, setSaving] = useState(false);
     const [resetting, setResetting] = useState(false);
     const [modified, setModified] = useState({});
+    const defaultValues = {
+        wa_message_delay_ms: '20000',
+        wa_rate_limit: '20',
+    };
 
     useEffect(() => {
         adminService.getSettings()
@@ -63,7 +67,9 @@ export default function AdminSettings() {
 
     if (loading) return <Loader text="Memuat pengaturan..." />;
 
-    const getValue = (key) => modified[key] !== undefined ? modified[key] : settings.find(s => s.key === key)?.value || '';
+    const getValue = (key) => modified[key] !== undefined
+        ? modified[key]
+        : settings.find((s) => s.key === key)?.value || defaultValues[key] || '';
 
     const fields = [
         { key: 'election_name', label: 'Nama Pemilihan', type: 'text' },
@@ -74,7 +80,15 @@ export default function AdminSettings() {
         { key: 'pooling_end', label: 'Tanggal Selesai', type: 'datetime-local' },
         { key: 'pooling_status', label: 'Status Pooling', type: 'select', options: ['active', 'paused', 'closed'] },
         { key: 'show_realtime', label: 'Tampilkan Hasil Real-time', type: 'select', options: ['1', '0'] },
-        { key: 'token_expiry_days', label: 'Masa Berlaku Token (hari)', type: 'number' },
+        { key: 'token_expiry_days', label: 'Masa Berlaku Token (hari)', type: 'number', min: 1 },
+        { key: 'wa_message_delay_ms', label: 'Interval WA per Pesan (detik)', type: 'seconds-ms' },
+        {
+            key: 'wa_rate_limit',
+            label: 'Jumlah WA per Batch (orang)',
+            type: 'number',
+            min: 1,
+            note: 'Rekomendasi aman: 5-10 orang per batch.',
+        },
     ];
 
     return (
@@ -86,7 +100,7 @@ export default function AdminSettings() {
 
             <div className="card">
                 <div className="space-y-4">
-                    {fields.map(({ key, label, type, options }) => (
+                    {fields.map(({ key, label, type, options, min, note }) => (
                         <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                             <label className="text-sm font-medium text-gray-700">{label}</label>
                             <div className="md:col-span-2">
@@ -101,9 +115,26 @@ export default function AdminSettings() {
                                         onChange={(e) => handleChange(key, jakartaDateTimeLocalInputToIso(e.target.value))}
                                         className="input-field"
                                     />
+                                ) : type === 'seconds-ms' ? (
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={Math.max(1, Math.round((Number(getValue(key)) || 20000) / 1000))}
+                                        onChange={(e) => handleChange(key, String(Math.max(1, Number(e.target.value || 1)) * 1000))}
+                                        className="input-field"
+                                    />
                                 ) : (
-                                    <input type={type} value={getValue(key)} onChange={(e) => handleChange(key, e.target.value)} className="input-field" />
+                                    <input
+                                        type={type}
+                                        min={min}
+                                        value={getValue(key)}
+                                        onChange={(e) => handleChange(key, e.target.value)}
+                                        className="input-field"
+                                    />
                                 )}
+                                {note ? (
+                                    <p className="text-xs text-gray-500 mt-1">{note}</p>
+                                ) : null}
                             </div>
                         </div>
                     ))}

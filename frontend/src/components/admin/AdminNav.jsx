@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAdminStore from '../../stores/adminStore';
-import { LayoutDashboard, Users, UserCheck, MessageSquare, Activity, Settings, LogOut, Vote, History, FileText, Globe } from 'lucide-react';
+import { LayoutDashboard, Users, UserCheck, MessageSquare, Activity, Settings, LogOut, Vote, History, FileText, Globe, X } from 'lucide-react';
 
 const navItems = [
     { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -14,27 +14,46 @@ const navItems = [
     { to: '/admin/settings', icon: Settings, label: 'Pengaturan' },
 ];
 
-export default function AdminNav() {
+export default function AdminNav({ mobile = false, onNavigate = null }) {
     const { admin, logout } = useAdminStore();
     const navigate = useNavigate();
+    const closeNav = () => {
+        if (typeof onNavigate === 'function') onNavigate();
+    };
 
     const handleLogout = () => {
         logout();
+        closeNav();
         navigate('/admin');
     };
 
+    const asideClass = mobile
+        ? 'h-full w-full bg-gray-900 text-white flex flex-col'
+        : 'hidden md:flex fixed left-0 top-0 bottom-0 w-64 bg-gray-900 text-white z-40 flex-col';
+
     return (
-        <aside className="fixed left-0 top-0 bottom-0 w-64 bg-gray-900 text-white z-40 flex flex-col">
+        <aside className={asideClass}>
             {/* Logo */}
             <div className="p-5 border-b border-gray-800">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
-                        <Vote className="w-5 h-5" />
+                <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
+                            <Vote className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h1 className="font-bold text-sm">E-Pooling RT</h1>
+                            <p className="text-[10px] text-gray-400">Admin Panel</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="font-bold text-sm">E-Pooling RT</h1>
-                        <p className="text-[10px] text-gray-400">Admin Panel</p>
-                    </div>
+                    {mobile ? (
+                        <button
+                            onClick={closeNav}
+                            className="w-8 h-8 rounded-lg border border-gray-700 flex items-center justify-center text-gray-300"
+                            aria-label="Tutup menu admin"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    ) : null}
                 </div>
             </div>
 
@@ -45,6 +64,7 @@ export default function AdminNav() {
                         <NavLink
                             key={to}
                             to={to}
+                            onClick={closeNav}
                             className={({ isActive }) =>
                                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
                 ${isActive
@@ -63,10 +83,10 @@ export default function AdminNav() {
             {/* User Info */}
             <div className="p-4 border-t border-gray-800">
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-xs font-bold">
+                    <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
                         {admin?.nama?.charAt(0) || 'A'}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div>
                         <p className="text-sm font-medium truncate">{admin?.nama || 'Admin'}</p>
                         <p className="text-xs text-gray-500">{admin?.role || 'admin'}</p>
                     </div>
